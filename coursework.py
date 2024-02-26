@@ -2,6 +2,7 @@ import requests
 import json
 from tqdm import tqdm
 from pprint import pprint
+from urllib.parse import urlencode
 
 
 vk_token = ''
@@ -19,7 +20,7 @@ class VKAPIClient:
         params = {
             'owner_id': self.user_id,
             'album_id': 'profile',
-            'rev': 0, 
+            'rev': 0, #хронологический порядок
             'extended': 1,
             'access_token': self.token,
             'v': '5.131'
@@ -30,6 +31,8 @@ class VKAPIClient:
 if __name__ == '__main__':
     vk_client = VKAPIClient(vk_token, vk_id)
     photos_info = vk_client.get_photos()
+    # pprint(photos_info)
+
 
 '''Получаем пожелания пользователя'''
 answer = str(input('Желаете задать количество фотографий для скачивания (y/n)?\n'))
@@ -48,12 +51,13 @@ headers_dict = {
 response = requests.put(url_create_folder, params=params_dict, headers=headers_dict)
 
 '''Скачиваем фотографии'''
+url_load = photos_info.get('response').get('items')
 in_total = len(photos_info.get('response').get('items'))
 for n in tqdm(range(min(number, in_total))):
     likes = photos_info.get('response').get('items')[n].get('likes').get('count')
+    dates = photos_info.get('response').get('items')[n].get('date')
     url_load_photos = photos_info.get('response').get('items')[n].get('sizes')
     width = 0
-    url_photo_max = ''
     for i in (url_load_photos):
         if i.get('width') > width:
             width = i.get('width')
@@ -64,16 +68,12 @@ for n in tqdm(range(min(number, in_total))):
         '''Сохраняем на Яндекс Диск'''
     url_get_link = f'{url_create_folder}/upload'
     params_dict = {
-        'path': f'{folder_name}/{likes}.jpg',
-        'overwrite': 'true'
+        'path': f'{folder_name}/{likes}-{dates}.jpg'
     }
     headers_dict = {
         'Authorization': ya_token
     }
     response = requests.get(url_get_link, params=params_dict, headers=headers_dict)
     url_for_upload = response.json().get('href')
-    with open(f'{likes}.jpg', 'rb') as file:
+    with open (f'{likes}.jpg', 'rb') as file:
         response = requests.put(url_for_upload, headers=headers_dict, files={'File': file})
-
-ans = input('Показать json-файл с информацией (y/n)?\n')
-pprint(photos_info) if ans == 'y' else None
