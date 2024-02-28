@@ -4,7 +4,21 @@ from tqdm import tqdm
 from pprint import pprint
 from urllib.parse import urlencode
 
-vk_token = ''
+# получить токен для ВК по ссылке:
+app_id = '51845037'
+oauth_base_url = 'https://oauth.vk.com/authorize'
+params = {
+    'client_id': app_id,
+    'redirect_uri': 'https://oauth.vk.com/blank.html',
+    'display': 'page',
+    'scope': 'photos',
+    'response_type': 'token',
+    'v': '5.131'
+}
+oauth_url = f'{oauth_base_url}?{urlencode(params)}'
+print(oauth_url)
+
+vk_token = '' # вставить полученный токен
 vk_id = int(input('Bведите id пользователя vk:\n'))
 ya_token = input('Скопируйте токен с Полигона Яндекс.Диска:\n')
 
@@ -28,10 +42,6 @@ class VKAPIClient:
         }
         response = requests.get('https://api.vk.com/method/photos.get', params=params)
         return response.json()
-
-if __name__ == '__main__':
-    vk_client = VKAPIClient(vk_token, vk_id)
-    photos_info = vk_client.get_photos()
 
 def create_folder(folder_name):
     base_url = 'https://cloud-api.yandex.net'
@@ -78,5 +88,8 @@ def download_photos(photos_info, number):
         saving_photos(input_folder_name, likes, dates)
     return
 
-create_folder(input_folder_name)
-download_photos(photos_info, input_number)
+if __name__ == '__main__':
+    vk_client = VKAPIClient(vk_token, vk_id)
+    photos_info = vk_client.get_photos()
+    create_folder(input_folder_name)
+    download_photos(photos_info, input_number)
